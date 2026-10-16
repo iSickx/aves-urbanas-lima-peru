@@ -1,1 +1,273 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aves Urbanas de Lima</title>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+<style>
+  :root{
+    --bg:#f5f3ec; --card:#fff; --ink:#1f2a24; --muted:#66736b; --accent:#2f7d5b;
+    --accent-2:#e8f2ec; --warn:#b45309; --line:#e2ded2;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#141a16; --card:#1c241f; --ink:#e8efe9; --muted:#9aa8a0; --accent:#5fc08f;
+           --accent-2:#22322a; --warn:#f0a95a; --line:#2c3a32; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+  header{padding:28px 16px 8px;max-width:960px;margin:0 auto}
+  h1{margin:0 0 4px;font-size:1.7rem}
+  header p{margin:0;color:var(--muted)}
+  main{max-width:960px;margin:0 auto;padding:16px;display:grid;gap:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+  h2{margin:0 0 12px;font-size:1.1rem}
+  #drop{border:2px dashed var(--line);border-radius:12px;padding:28px;text-align:center;color:var(--muted);cursor:pointer}
+  #drop.over{border-color:var(--accent);background:var(--accent-2)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;justify-content:center}
+  button,.btn{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:9px 14px;font-size:.95rem;cursor:pointer}
+  button.sec{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  #estado{margin:10px 0 0;font-size:.9rem;color:var(--muted)}
+  #estado.err{color:var(--warn)}
+  .resultado{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:18px}
+  @media (max-width:700px){.resultado{grid-template-columns:1fr}}
+  #preview{width:100%;max-height:340px;object-fit:contain;border-radius:10px;background:var(--accent-2)}
+  .barra{margin:8px 0}
+  .barra .top{display:flex;justify-content:space-between;font-size:.92rem}
+  .barra .fondo{height:10px;background:var(--accent-2);border-radius:6px;overflow:hidden}
+  .barra .nivel{height:100%;background:var(--accent)}
+  .aviso{background:var(--accent-2);border-left:4px solid var(--warn);padding:8px 12px;border-radius:6px;font-size:.9rem;margin:10px 0}
+  .ficha h3{margin:12px 0 2px}
+  .ficha em{color:var(--muted)}
+  label{display:block;font-size:.9rem;margin:8px 0 4px}
+  input[type=text]{width:100%;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+  .checks{display:flex;gap:12px;flex-wrap:wrap;font-size:.92rem}
+  .checks label{display:flex;align-items:center;gap:6px;margin:0}
+  table{width:100%;border-collapse:collapse;font-size:.9rem}
+  th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left}
+  th{color:var(--muted);font-weight:600}
+  .tablewrap{overflow-x:auto}
+  footer{max-width:960px;margin:0 auto;padding:8px 16px 32px;color:var(--muted);font-size:.82rem}
+  .oculto{display:none}
+</style>
+</head>
+<body>
+<header>
+  <h1>Aves urbanas de Lima</h1>
+  <p>Sube una foto y el modelo de visión computacional te dirá qué especie es. Luego regístrala en el parque donde la viste.</p>
+</header>
 
+<main>
+  <section class="card">
+    <h2>1. Reconocer un ave</h2>
+    <div id="drop" tabindex="0">Arrastra una foto aquí o usa los botones</div>
+    <div class="row">
+      <button id="btnSubir">Subir foto</button>
+      <button id="btnCamara" class="sec">Usar cámara</button>
+    </div>
+    <input id="archivo" type="file" accept="image/*" class="oculto">
+    <input id="camara" type="file" accept="image/*" capture="environment" class="oculto">
+    <p id="estado">Cargando modelo…</p>
+  </section>
+
+  <section id="panelResultado" class="card oculto">
+    <h2>Resultado</h2>
+    <div class="resultado">
+      <img id="preview" alt="Foto subida">
+      <div>
+        <div id="barras"></div>
+        <div id="aviso" class="aviso oculto"></div>
+        <div id="ficha" class="ficha"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="panelRegistro" class="card oculto">
+    <h2>2. Registrar observación en un parque</h2>
+    <label for="parque">Nombre del parque o espacio</label>
+    <input id="parque" type="text" placeholder="Ej.: Parque Kennedy, Parque de la Exposición…">
+    <label>Características del espacio</label>
+    <div class="checks" id="caracts">
+      <label><input type="checkbox" value="Muchos árboles"> Muchos árboles</label>
+      <label><input type="checkbox" value="Césped amplio"> Césped amplio</label>
+      <label><input type="checkbox" value="Cuerpo de agua"> Cuerpo de agua</label>
+      <label><input type="checkbox" value="Flores/jardines"> Flores/jardines</label>
+      <label><input type="checkbox" value="Zona muy construida"> Zona muy construida</label>
+      <label><input type="checkbox" value="Cerca del mar"> Cerca del mar</label>
+    </div>
+    <div class="row" style="justify-content:flex-start">
+      <button id="btnGuardar">Guardar observación</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>3. Registro y resumen por parque</h2>
+    <p id="vacio" style="color:var(--muted);margin:0">Aún no hay observaciones guardadas.</p>
+    <div id="resumen" class="tablewrap"></div>
+    <div class="row" style="justify-content:flex-start">
+      <button id="btnCsv" class="sec">Descargar CSV</button>
+      <button id="btnBorrar" class="sec">Borrar registro</button>
+    </div>
+  </section>
+</main>
+
+<footer>
+  Proyecto de Inteligencia Artificial Aplicada. Modelo entrenado con fotos de iNaturalist (licencias Creative Commons).
+  El modelo solo reconoce las especies de su catálogo; con una foto borrosa o de otra especie puede equivocarse.
+</footer>
+
+<script>
+const IMG = 224;
+const UMBRAL = 0.50;           // por debajo, se avisa que la identificación es incierta
+const CLAVE = "obs_aves_lima_v1";
+let modelo = null, clases = [], especies = {};
+let ultima = null;             // última predicción {clave, confianza}
+
+const $ = (id) => document.getElementById(id);
+const estado = (txt, err=false) => { $("estado").textContent = txt; $("estado").className = err ? "err" : ""; };
+
+function nombreComun(clave){ return (especies[clave] && especies[clave].comun) || clave.replace(/_/g, " "); }
+
+async function iniciar(){
+  try{
+    const [c, e] = await Promise.all([
+      fetch("model/class_names.json").then(r => { if(!r.ok) throw new Error("class_names"); return r.json(); }),
+      fetch("especies.json").then(r => r.json())
+    ]);
+    clases = c; especies = e;
+    modelo = await tf.loadLayersModel("model/model.json");
+    tf.tidy(() => modelo.predict(tf.zeros([1, IMG, IMG, 3])));   // calentamiento
+    estado("Modelo listo (" + clases.length + " especies). Sube una foto.");
+  }catch(err){
+    console.error(err);
+    estado("No se pudo cargar el modelo. Entrena y convierte el modelo (ver README) y abre la página desde un servidor local, no con doble clic.", true);
+  }
+  pintarResumen();
+}
+
+function leerArchivo(f){
+  if(!f || !f.type.startsWith("image/")) return;
+  const img = $("preview");
+  img.onload = () => predecir(img);
+  img.src = URL.createObjectURL(f);
+  $("panelResultado").classList.remove("oculto");
+}
+
+async function predecir(img){
+  if(!modelo){ estado("El modelo aún no está disponible.", true); return; }
+  const salida = tf.tidy(() => {
+    const x = tf.browser.fromPixels(img).resizeBilinear([IMG, IMG]).toFloat()
+      .div(127.5).sub(1).expandDims(0);          // mismo preprocesado que MobileNetV2
+    return modelo.predict(x);
+  });
+  const p = Array.from(await salida.data());
+  salida.dispose();
+  const top = p.map((v, i) => ({ clave: clases[i], prob: v })).sort((a, b) => b.prob - a.prob).slice(0, 3);
+  ultima = { clave: top[0].clave, confianza: top[0].prob };
+  pintarResultado(top);
+}
+
+function pintarResultado(top){
+  const cont = $("barras"); cont.textContent = "";
+  top.forEach(t => {
+    const b = document.createElement("div"); b.className = "barra";
+    const fila = document.createElement("div"); fila.className = "top";
+    const n = document.createElement("span"); n.textContent = nombreComun(t.clave);
+    const v = document.createElement("strong"); v.textContent = (t.prob * 100).toFixed(1) + "%";
+    fila.append(n, v);
+    const fondo = document.createElement("div"); fondo.className = "fondo";
+    const nivel = document.createElement("div"); nivel.className = "nivel"; nivel.style.width = (t.prob * 100) + "%";
+    fondo.appendChild(nivel); b.append(fila, fondo); cont.appendChild(b);
+  });
+  const aviso = $("aviso");
+  if(top[0].prob < UMBRAL){
+    aviso.textContent = "Confianza baja: podría ser una especie fuera del catálogo o la foto no es clara. Prueba con otra foto.";
+    aviso.classList.remove("oculto");
+  } else aviso.classList.add("oculto");
+
+  const e = especies[top[0].clave] || {};
+  const f = $("ficha"); f.textContent = "";
+  const h = document.createElement("h3"); h.textContent = nombreComun(top[0].clave);
+  const sci = document.createElement("em"); sci.textContent = e.cientifico || top[0].clave.replace(/_/g, " ");
+  f.append(h, sci);
+  [["Origen", e.origen], ["Descripción", e.descripcion], ["Dónde verla", e.habitat]].forEach(([k, v]) => {
+    if(!v) return;
+    const p = document.createElement("p"); p.style.margin = "6px 0";
+    const s = document.createElement("strong"); s.textContent = k + ": ";
+    p.append(s, document.createTextNode(v)); f.appendChild(p);
+  });
+  $("panelRegistro").classList.remove("oculto");
+}
+
+/* ---------- Registro por parque (localStorage) ---------- */
+function leerRegistro(){ try{ return JSON.parse(localStorage.getItem(CLAVE)) || []; }catch(e){ return []; } }
+function escribirRegistro(r){ try{ localStorage.setItem(CLAVE, JSON.stringify(r)); }catch(e){ estado("No se pudo guardar en este navegador.", true); } }
+
+function guardar(){
+  const parque = $("parque").value.trim();
+  if(!ultima){ return; }
+  if(!parque){ estado("Escribe el nombre del parque antes de guardar.", true); return; }
+  const caract = [...document.querySelectorAll("#caracts input:checked")].map(i => i.value);
+  const r = leerRegistro();
+  r.push({ fecha: new Date().toISOString(), parque, especie: ultima.clave, confianza: +ultima.confianza.toFixed(3), caract });
+  escribirRegistro(r);
+  estado("Observación guardada.");
+  pintarResumen();
+}
+
+function celda(tr, txt, th=false){ const c = document.createElement(th ? "th" : "td"); c.textContent = txt; tr.appendChild(c); }
+
+function pintarResumen(){
+  const r = leerRegistro();
+  $("vacio").classList.toggle("oculto", r.length > 0);
+  const cont = $("resumen"); cont.textContent = "";
+  if(!r.length) return;
+  const porParque = {};
+  r.forEach(o => {
+    const p = porParque[o.parque] = porParque[o.parque] || { n: 0, esp: new Set(), caract: new Set() };
+    p.n++; p.esp.add(o.especie); o.caract.forEach(c => p.caract.add(c));
+  });
+  const t = document.createElement("table");
+  const head = document.createElement("tr");
+  ["Parque", "Observaciones", "Especies distintas", "Especies", "Características"].forEach(x => celda(head, x, true));
+  t.appendChild(head);
+  Object.entries(porParque).forEach(([nombre, p]) => {
+    const tr = document.createElement("tr");
+    celda(tr, nombre); celda(tr, p.n); celda(tr, p.esp.size);
+    celda(tr, [...p.esp].map(nombreComun).join(", "));
+    celda(tr, [...p.caract].join(", ") || "—");
+    t.appendChild(tr);
+  });
+  cont.appendChild(t);
+}
+
+function csvSeguro(v){ let s = String(v); if(/^[=+\-@]/.test(s)) s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; }
+
+function descargarCsv(){
+  const r = leerRegistro();
+  if(!r.length) return;
+  const filas = [["fecha", "parque", "especie", "nombre_comun", "confianza", "caracteristicas"]];
+  r.forEach(o => filas.push([o.fecha, o.parque, o.especie.replace(/_/g, " "), nombreComun(o.especie), o.confianza, o.caract.join("; ")]));
+  const blob = new Blob(["﻿" + filas.map(f => f.map(csvSeguro).join(",")).join("\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "observaciones_aves_lima.csv"; a.click();
+}
+
+/* ---------- Eventos ---------- */
+$("btnSubir").onclick = () => $("archivo").click();
+$("btnCamara").onclick = () => $("camara").click();
+$("archivo").onchange = (e) => leerArchivo(e.target.files[0]);
+$("camara").onchange = (e) => leerArchivo(e.target.files[0]);
+$("btnGuardar").onclick = guardar;
+$("btnCsv").onclick = descargarCsv;
+$("btnBorrar").onclick = () => { if(confirm("¿Borrar todas las observaciones guardadas?")){ escribirRegistro([]); pintarResumen(); } };
+const drop = $("drop");
+drop.onclick = () => $("archivo").click();
+drop.ondragover = (e) => { e.preventDefault(); drop.classList.add("over"); };
+drop.ondragleave = () => drop.classList.remove("over");
+drop.ondrop = (e) => { e.preventDefault(); drop.classList.remove("over"); leerArchivo(e.dataTransfer.files[0]); };
+
+iniciar();
+</script>
+</body>
+</html>
