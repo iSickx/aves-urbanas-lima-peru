@@ -13,7 +13,7 @@ y permite registrar observaciones por parque junto con las características del 
    en ImageNet): primero la cabeza clasificadora y luego ajuste fino de las últimas 30 capas.
    Evalúa en un conjunto de prueba separado (70/15/15 estratificado) y genera precisión, top-3,
    reporte por clase, matriz de confusión y curvas de entrenamiento.
-3. `web/` contiene la página que carga el modelo en el navegador con TensorFlow.js
+3. `docs/` contiene la página que carga el modelo en el navegador con TensorFlow.js
    (las fotos no se envían a ningún servidor).
 
 ## Requisitos
