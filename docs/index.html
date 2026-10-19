@@ -364,7 +364,7 @@ const UMBRAL = 0.50;                 // por debajo de esto se avisa que el model
 const CLAVE = "obs_aves_lima_v1";
 const CARACTS = ["Muchos árboles", "Césped amplio", "Cuerpo de agua", "Flores y jardines", "Zona muy construida", "Cerca del mar"];
 // Opcional: tras entrenar, copia aquí los valores de metricas.json (entre 0 y 1) para mostrarlos en el pie.
-const METRICAS = { top1: null, top3: null };
+const METRICAS = { top1: 0.669, top3: 0.847 };
 
 let modelo = null, clases = [], especies = {}, ultima = null, urlFoto = null;
 const filtro = { origen: "todas", grupo: "todos", q: "" };
