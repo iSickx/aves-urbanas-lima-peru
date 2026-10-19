@@ -78,8 +78,6 @@
   .chip{--c1:#8a979c;--c2:#4b5a60;aspect-ratio:1;border-radius:4px;background:linear-gradient(135deg,var(--c1) 0 54%,var(--c2) 54% 100%);box-shadow:inset 0 0 0 1px rgb(0 0 0 / .14)}
   .chip.entra{animation:cortar .7s cubic-bezier(.2,.7,.2,1) both}
   @keyframes cortar{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
-  /* ficha aún sin revelar: gris rayado hasta que se identifica esa ave */
-  .chip.oculto{background:repeating-linear-gradient(135deg,var(--soft) 0 9px,color-mix(in srgb,var(--soft) 65%,var(--line)) 9px 18px);box-shadow:inset 0 0 0 1px var(--line)}
 
   /* Resultado */
   #resultado{padding-bottom:64px}
@@ -125,20 +123,6 @@
   .seccion{padding-top:56px;padding-bottom:64px}
   .seccion h2{font-size:clamp(1.8rem,3.4vw,2.5rem);font-weight:700}
   .seccion .sub{margin-top:10px;color:var(--muted);max-width:56ch}
-  .barra-filtros{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:center;margin-top:26px}
-  .barra-filtros input[type=search]{width:260px;max-width:100%}
-  .barra-filtros select{width:auto;min-width:190px}
-  .filtros{display:flex;gap:8px;flex-wrap:wrap}
-  .filtros button{font:500 .92rem var(--body);padding:8px 14px;border:1.5px solid var(--line-strong);border-radius:999px;background:transparent;color:var(--ink);cursor:pointer}
-  .filtros button[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
-  .cuenta{margin-top:18px;color:var(--muted);font-size:.92rem}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;list-style:none;margin:14px 0 0;padding:0}
-  .tile{display:flex;flex-direction:column;width:100%;height:100%;text-align:left;padding:0;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:inherit;font:inherit;cursor:pointer;overflow:hidden}
-  .tile:hover{border-color:var(--accent)}
-  .tile .chip{aspect-ratio:3/2;border-radius:0}
-  .tile-nombre{padding:10px 11px 0;font:700 1.02rem/1.2 var(--display)}
-  .tile-sci{padding:3px 11px 0;font-style:italic;font-size:.85rem;color:var(--muted)}
-  .tile-origen{padding:6px 11px 11px;font-size:.82rem;color:var(--muted)}
   .nota{margin-top:18px;color:var(--muted);font-size:.9rem}
 
   /* Observaciones guardadas */
@@ -160,15 +144,6 @@
   .pie{padding-top:28px;padding-bottom:48px;color:var(--muted);font-size:.9rem}
   .pie p{max-width:70ch}
   .pie p + p{margin-top:8px}
-
-  /* Ficha emergente */
-  dialog{border:0;padding:0;border-radius:8px;background:var(--surface);color:var(--ink);width:min(560px,calc(100vw - 32px))}
-  dialog::backdrop{background:rgb(8 20 26 / .62)}
-  .dlg-in{padding:26px;display:grid;grid-template-columns:110px minmax(0,1fr);gap:20px}
-  .dlg-in h2{font-size:1.7rem}
-  .dlg-cuerpo{grid-column:1 / -1}
-  .dlg-cuerpo p + p{margin-top:10px}
-  .dlg-cerrar{grid-column:1 / -1;justify-self:end}
 
   /* Aviso breve */
   #toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);max-width:calc(100vw - 32px);padding:12px 18px;border-radius:6px;background:var(--ink);color:var(--bg);font-weight:500;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:20}
@@ -204,7 +179,6 @@
   </a>
   <nav aria-label="Secciones">
     <a href="#reconocer">Reconocer</a>
-    <a href="#catalogo">Catálogo</a>
     <a href="#registro">Registro</a>
   </nav>
 </header>
@@ -263,13 +237,14 @@
           </div>
         </div>
 
-        <p class="aviso" id="rAviso" hidden>El modelo no está seguro. Puede ser una especie que no está en el catálogo o la foto no se ve bien. Prueba con otra foto en la que el ave se vea completa.</p>
+        <p class="aviso" id="rAviso" hidden>El modelo no está seguro. Puede ser una especie que el modelo no conoce o la foto no se ve bien. Prueba con otra foto en la que el ave se vea completa.</p>
 
         <div class="res-cuerpo">
           <div>
             <h3>Sobre esta especie</h3>
             <p id="rDesc"></p>
             <p id="rHabitatP"><strong>Dónde verla:</strong> <span id="rHabitat"></span></p>
+            <p class="nota">Los colores de la ficha son una referencia aproximada del plumaje.</p>
           </div>
           <div>
             <h3>También podría ser</h3>
@@ -292,25 +267,6 @@
         </form>
       </div>
     </div>
-  </section>
-
-  <section class="wrap seccion" id="catalogo">
-    <h2>Catálogo de especies</h2>
-    <p class="sub">Las aves que el modelo sabe reconocer. El color de cada ficha aparece cuando identificas esa ave con una foto.</p>
-    <div class="barra-filtros">
-      <input id="buscar" type="search" placeholder="Buscar por nombre" aria-label="Buscar por nombre">
-      <div class="filtros" id="filtroOrigen" role="group" aria-label="Filtrar por origen">
-        <button type="button" data-origen="todas" aria-pressed="true">Todas</button>
-        <button type="button" data-origen="nativa" aria-pressed="false">Nativas</button>
-        <button type="button" data-origen="introducida" aria-pressed="false">Introducidas</button>
-      </div>
-      <select id="filtroGrupo" aria-label="Filtrar por grupo"></select>
-    </div>
-    <p class="cuenta" id="cuenta"></p>
-    <ul class="grid" id="grid"></ul>
-    <p class="nota" id="vacioCat" hidden>No hay especies con esos filtros. Prueba quitar alguno.</p>
-    <p class="nota">Los colores son una referencia aproximada del plumaje, no una foto de la especie.</p>
-    <button class="btn sec" id="btnReiniciar" type="button" style="margin-top:14px">Volver a ocultar los colores</button>
   </section>
 
   <section class="wrap seccion" id="registro">
@@ -339,25 +295,9 @@
 
 <footer class="wrap pie">
   <p>Proyecto de Inteligencia Artificial Aplicada. El modelo se entrenó con fotos de iNaturalist con licencia Creative Commons.</p>
-  <p>Solo reconoce las especies del catálogo y puede equivocarse, sobre todo con fotos lejanas o borrosas.</p>
+  <p>Solo reconoce las especies con las que fue entrenado y puede equivocarse, sobre todo con fotos lejanas o borrosas.</p>
   <p id="pieMetricas" hidden></p>
 </footer>
-
-<dialog id="dlg" aria-labelledby="dNombre">
-  <div class="dlg-in">
-    <div class="chip" id="dChip"></div>
-    <div>
-      <h2 id="dNombre"></h2>
-      <p class="sci" id="dSci"></p>
-      <div class="tags"><span class="tag" id="dOrigen"></span><span class="tag" id="dGrupo"></span></div>
-    </div>
-    <div class="dlg-cuerpo">
-      <p id="dDesc"></p>
-      <p><strong>Dónde verla:</strong> <span id="dHabitat"></span></p>
-    </div>
-    <button class="btn sec dlg-cerrar" id="dCerrar" type="button">Cerrar</button>
-  </div>
-</dialog>
 
 <div id="toast" role="status"></div>
 
@@ -365,14 +305,11 @@
 const IMG = 224;
 const UMBRAL = 0.50;                 // por debajo de esto se avisa que el modelo no está seguro
 const CLAVE = "obs_aves_lima_v1";
-const CLAVE_D = "aves_descubiertas_v1";   // aves ya identificadas: su color se muestra en el catálogo
 const CARACTS = ["Muchos árboles", "Césped amplio", "Cuerpo de agua", "Flores y jardines", "Zona muy construida", "Cerca del mar"];
 // Métricas del modelo de 20 especies en el conjunto de prueba (de metricas.json). Pon null para ocultarlas.
 const METRICAS = { top1: 0.669, top3: 0.847 };
 
 let modelo = null, clases = [], especies = {}, ultima = null, urlFoto = null;
-const descubiertas = new Set(leerDescubiertas());
-const filtro = { origen: "todas", grupo: "todos", q: "" };
 
 const $ = (id) => document.getElementById(id);
 const norm = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -409,13 +346,6 @@ function ficha(clave){
 function pintarChip(el, f){ el.style.setProperty("--c1", f.plumaje[0]); el.style.setProperty("--c2", f.plumaje[1]); }
 function claves(){ return clases.length ? clases : Object.keys(especies); }
 
-function leerDescubiertas(){
-  try{ const a = JSON.parse(localStorage.getItem(CLAVE_D)); return Array.isArray(a) ? a : []; }catch(e){ return []; }
-}
-function guardarDescubiertas(){
-  try{ localStorage.setItem(CLAVE_D, JSON.stringify([...descubiertas])); }catch(e){ /* sin almacenamiento: solo dura esta visita */ }
-}
-
 function estadoModelo(tipo, texto){ $("estado").dataset.tipo = tipo; $("estadoTxt").textContent = texto; }
 
 let tToast;
@@ -443,8 +373,6 @@ async function iniciar(){
     if(!r.ok) throw new Error("class_names.json");
     clases = await r.json();
   }catch(e){ console.error(e); clases = []; }
-  construirFiltros();
-  pintarCatalogo();
   try{
     modelo = await tf.loadLayersModel("model/model.json");
     tf.tidy(() => modelo.predict(tf.zeros([1, IMG, IMG, 3])));     // calentamiento
@@ -499,12 +427,6 @@ async function predecir(img){
 function mostrarResultado(top){
   const f = ficha(top[0].clave), p = top[0].prob;
   ultima = { clave: f.clave, confianza: p };
-  if(p >= UMBRAL && !descubiertas.has(f.clave)){       // solo se revela el color si el modelo está seguro
-    descubiertas.add(f.clave);
-    guardarDescubiertas();
-    pintarCatalogo();
-    toast("Color de «" + f.comun + "» añadido al catálogo.");
-  }
   $("resVacio").hidden = true;
   $("res").hidden = false;
 
@@ -541,56 +463,6 @@ function mostrarResultado(top){
   });
 
   $("resultado").scrollIntoView({ behavior: sinMovimiento() ? "auto" : "smooth", block: "start" });
-}
-
-/* ---------- Catálogo ---------- */
-function construirFiltros(){
-  const grupos = [...new Set(claves().map((k) => ficha(k).grupo))].sort((a, b) => a.localeCompare(b, "es"));
-  const sel = $("filtroGrupo"); sel.textContent = "";
-  sel.appendChild(h("option", { value: "todos", text: "Todos los grupos" }));
-  grupos.forEach((g) => sel.appendChild(h("option", { value: g, text: g })));
-}
-
-function pintarCatalogo(){
-  const cont = $("grid"); cont.textContent = "";
-  const todas = claves().map(ficha);
-  const q = norm(filtro.q);
-  const items = todas.filter((f) =>
-    (filtro.origen === "todas" || norm(f.origen) === filtro.origen) &&
-    (filtro.grupo === "todos" || f.grupo === filtro.grupo) &&
-    (!q || norm(f.comun).includes(q) || norm(f.cientifico).includes(q))
-  ).sort((a, b) => a.comun.localeCompare(b.comun, "es"));
-  const nVistas = todas.filter((f) => descubiertas.has(f.clave)).length;
-  $("cuenta").textContent = (items.length === todas.length
-    ? plural(todas.length, "especie", "especies")
-    : items.length + " de " + todas.length + " especies") + ". Has identificado " + nVistas + ".";
-  $("vacioCat").hidden = items.length > 0;
-  items.forEach((f) => {
-    const visto = descubiertas.has(f.clave);
-    const chip = h("div", { class: visto ? "chip" : "chip oculto" });
-    if(visto) pintarChip(chip, f);
-    cont.appendChild(h("li", {},
-      h("button", { class: "tile", type: "button", onclick: () => abrirFicha(f.clave) },
-        chip,
-        h("span", { class: "tile-nombre", text: f.comun }),
-        h("span", { class: "tile-sci", text: f.cientifico }),
-        h("span", { class: "tile-origen", text: f.origen }))));
-  });
-}
-
-function abrirFicha(clave){
-  const f = ficha(clave);
-  const visto = descubiertas.has(clave);
-  $("dChip").classList.toggle("oculto", !visto);
-  if(visto) pintarChip($("dChip"), f);
-  $("dNombre").textContent = f.comun;
-  $("dSci").textContent = f.cientifico;
-  $("dOrigen").textContent = f.origen || "Origen sin dato";
-  $("dGrupo").textContent = f.grupo;
-  $("dDesc").textContent = f.descripcion;
-  $("dHabitat").textContent = f.habitat || "Sin dato";
-  const d = $("dlg");
-  if(typeof d.showModal === "function") d.showModal(); else d.setAttribute("open", "");
 }
 
 /* ---------- Observaciones (se guardan en este navegador) ---------- */
@@ -702,21 +574,6 @@ zona.ondragover = (e) => { e.preventDefault(); zona.classList.add("sobre"); };
 zona.ondragleave = () => zona.classList.remove("sobre");
 zona.ondrop = (e) => { e.preventDefault(); zona.classList.remove("sobre"); leerArchivo(e.dataTransfer.files[0]); };
 
-$("buscar").oninput = (e) => { filtro.q = e.target.value; pintarCatalogo(); };
-$("filtroGrupo").onchange = (e) => { filtro.grupo = e.target.value; pintarCatalogo(); };
-document.querySelectorAll("#filtroOrigen button").forEach((b) => b.onclick = () => {
-  filtro.origen = b.dataset.origen;
-  document.querySelectorAll("#filtroOrigen button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-  pintarCatalogo();
-});
-
-$("btnReiniciar").onclick = () => {
-  descubiertas.clear(); guardarDescubiertas(); pintarCatalogo(); toast("Los colores del catálogo volvieron a ocultarse.");
-};
-
-const dlg = $("dlg");
-$("dCerrar").onclick = () => dlg.close ? dlg.close() : dlg.removeAttribute("open");
-dlg.addEventListener("click", (e) => { if(e.target === dlg) dlg.close(); });
 
 iniciar();
 </script>
