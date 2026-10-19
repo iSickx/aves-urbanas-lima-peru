@@ -1,8 +1,37 @@
 {
+  "Amazilia_amazilia": {
+    "comun": "Amazilia costeña (colibrí)",
+    "cientifico": "Amazilia amazilia",
+    "origen": "Nativa",
+    "grupo": "Colibríes",
+    "plumaje": ["#2E9A78", "#B4532D"],
+    "descripcion": "Colibrí de la costa que se alimenta del néctar de flores de parques y jardines.",
+    "habitat": "Jardines y parques con plantas con flores"
+  },
+  "Ardea_ibis": {
+    "comun": "Garza bueyera",
+    "cientifico": "Ardea ibis",
+    "origen": "Nativa",
+    "grupo": "Aves de costa y agua",
+    "plumaje": ["#F0EEE8", "#E3A03A"],
+    "descripcion": "Garza blanca de tamaño mediano que camina por el césped y los campos cultivados buscando insectos. En época reproductiva muestra tonos anaranjados.",
+    "habitat": "Áreas verdes amplias, campos de cultivo, bordes de humedales"
+  },
+  "Athene_cunicularia": {
+    "comun": "Lechuza de los arenales",
+    "cientifico": "Athene cunicularia",
+    "origen": "Nativa",
+    "grupo": "Rapaces y carroñeras",
+    "plumaje": ["#8B6E4B", "#EDE5D2"],
+    "descripcion": "Búho pequeño de patas largas que suele posarse en el suelo, en montículos o en postes, incluso de día.",
+    "habitat": "Terrenos abiertos, parques grandes, descampados"
+  },
   "Columba_livia": {
     "comun": "Paloma doméstica",
     "cientifico": "Columba livia",
     "origen": "Introducida",
+    "grupo": "Palomas",
+    "plumaje": ["#8A94A0", "#3F4A57"],
     "descripcion": "Ave muy asociada a plazas, edificios y parques de la ciudad; se alimenta de granos y restos de comida.",
     "habitat": "Plazas, techos, cornisas, parques con espacios abiertos"
   },
@@ -10,13 +39,134 @@
     "comun": "Tortolita peruana",
     "cientifico": "Columbina cruziana",
     "origen": "Nativa",
+    "grupo": "Palomas",
+    "plumaje": ["#B5A18B", "#E0A026"],
     "descripcion": "Pequeña paloma de la costa del Pacífico, frecuente en jardines y parques; suele caminar por el suelo buscando semillas.",
     "habitat": "Jardines, parques, áreas verdes con suelo descubierto"
+  },
+  "Coragyps_atratus": {
+    "comun": "Gallinazo de cabeza negra",
+    "cientifico": "Coragyps atratus",
+    "origen": "Nativa",
+    "grupo": "Rapaces y carroñeras",
+    "plumaje": ["#23262B", "#8D8F94"],
+    "descripcion": "Ave carroñera de plumaje negro que planea sobre la ciudad y cumple un rol en la limpieza del entorno.",
+    "habitat": "Cielo urbano, zonas con residuos, parques y áreas abiertas"
+  },
+  "Dives_warczewiczi": {
+    "comun": "Tordo de matorral",
+    "cientifico": "Dives warczewiczi",
+    "origen": "Nativa",
+    "grupo": "Pájaros",
+    "plumaje": ["#1E2126", "#4A5560"],
+    "descripcion": "Ave de plumaje negro brillante y cola larga, que camina por el césped y se ve en grupos en áreas verdes.",
+    "habitat": "Parques, jardines, campos y áreas verdes de la costa"
+  },
+  "Falco_sparverius": {
+    "comun": "Cernícalo americano",
+    "cientifico": "Falco sparverius",
+    "origen": "Nativa",
+    "grupo": "Rapaces y carroñeras",
+    "plumaje": ["#C2672B", "#5B7089"],
+    "descripcion": "Pequeño halcón que suele observarse posado en lugares altos o cerniéndose en el aire.",
+    "habitat": "Parques amplios, torres, postes y edificios altos"
+  },
+  "Forpus_coelestis": {
+    "comun": "Periquito del Pacífico",
+    "cientifico": "Forpus coelestis",
+    "origen": "Nativa",
+    "grupo": "Loros",
+    "plumaje": ["#6DAF3F", "#3C7FC4"],
+    "descripcion": "Pequeño loro verde de la costa del Pacífico, de vuelo rápido; se mueve en bandadas y se anuncia con chillidos agudos.",
+    "habitat": "Parques y jardines con árboles, campos de cultivo"
+  },
+  "Larus_dominicanus": {
+    "comun": "Gaviota dominicana",
+    "cientifico": "Larus dominicanus",
+    "origen": "Nativa",
+    "grupo": "Aves de costa y agua",
+    "plumaje": ["#F2F2EF", "#23272C"],
+    "descripcion": "Gaviota grande de dorso negro, común en el litoral y en áreas urbanas cercanas al mar.",
+    "habitat": "Costa, malecones y parques cercanos al litoral"
+  },
+  "Mimus_longicaudatus": {
+    "comun": "Calandria de cola larga",
+    "cientifico": "Mimus longicaudatus",
+    "origen": "Nativa",
+    "grupo": "Pájaros",
+    "plumaje": ["#8D8C86", "#E8E6DF"],
+    "descripcion": "Ave de cola larga y canto variado, propia de la costa del Pacífico sudamericano.",
+    "habitat": "Parques, jardines, matorrales y áreas abiertas"
+  },
+  "Nannopterum_brasilianum": {
+    "comun": "Cormorán neotropical",
+    "cientifico": "Nannopterum brasilianum",
+    "origen": "Nativa",
+    "grupo": "Aves de costa y agua",
+    "plumaje": ["#25292C", "#D8A93B"],
+    "descripcion": "Ave acuática de plumaje oscuro que bucea para pescar y suele posarse con las alas abiertas para secarse.",
+    "habitat": "Lagunas, ríos, humedales y litoral"
+  },
+  "Passer_domesticus": {
+    "comun": "Gorrión común",
+    "cientifico": "Passer domesticus",
+    "origen": "Introducida",
+    "grupo": "Pájaros",
+    "plumaje": ["#8B6B4A", "#3A3A3A"],
+    "descripcion": "Ave pequeña y gregaria, muy ligada a zonas construidas y al ser humano.",
+    "habitat": "Zonas urbanas, cercanía de edificios, parques"
+  },
+  "Pelecanus_thagus": {
+    "comun": "Pelícano peruano",
+    "cientifico": "Pelecanus thagus",
+    "origen": "Nativa",
+    "grupo": "Aves de costa y agua",
+    "plumaje": ["#8F8A80", "#E6D9B0"],
+    "descripcion": "Ave marina grande de pico largo con bolsa. Se ve en la costa de Lima, sobre todo cerca de muelles y caletas de pescadores.",
+    "habitat": "Litoral, muelles, malecones y caletas"
+  },
+  "Pyrocephalus_obscurus": {
+    "comun": "Mosquero bermellón (turtupilín)",
+    "cientifico": "Pyrocephalus obscurus",
+    "origen": "Nativa",
+    "grupo": "Pájaros",
+    "plumaje": ["#D6341E", "#3B2F2A"],
+    "descripcion": "El macho se distingue por su plumaje rojo brillante; caza insectos al vuelo desde perchas bajas.",
+    "habitat": "Áreas con árboles y arbustos, campos, cercanía de agua"
+  },
+  "Thraupis_episcopus": {
+    "comun": "Tangara azulada",
+    "cientifico": "Thraupis episcopus",
+    "origen": "Nativa",
+    "grupo": "Pájaros",
+    "plumaje": ["#6E8FB5", "#3F66A5"],
+    "descripcion": "Ave de plumaje azul grisáceo con alas más azules; se alimenta de frutas e insectos y visita jardines con árboles.",
+    "habitat": "Jardines, parques arbolados, avenidas con árboles"
+  },
+  "Turdus_chiguanco": {
+    "comun": "Zorzal chiguanco",
+    "cientifico": "Turdus chiguanco",
+    "origen": "Nativa",
+    "grupo": "Pájaros",
+    "plumaje": ["#6F5B47", "#E39B2D"],
+    "descripcion": "Zorzal de plumaje pardo con pico y patas anaranjados, que busca insectos y lombrices en el césped.",
+    "habitat": "Parques con césped y árboles, jardines"
+  },
+  "Tyrannus_melancholicus": {
+    "comun": "Tirano tropical",
+    "cientifico": "Tyrannus melancholicus",
+    "origen": "Nativa",
+    "grupo": "Pájaros",
+    "plumaje": ["#E4C21E", "#8A8F94"],
+    "descripcion": "Ave de pecho amarillo y cabeza gris que caza insectos al vuelo desde ramas, postes y cables.",
+    "habitat": "Árboles de parques y avenidas, cables, campos con árboles"
   },
   "Zenaida_meloda": {
     "comun": "Cuculí",
     "cientifico": "Zenaida meloda",
     "origen": "Nativa",
+    "grupo": "Palomas",
+    "plumaje": ["#B39A82", "#5E86A6"],
     "descripcion": "Paloma costera de mayor tamaño que la tortolita, reconocible por su canto característico.",
     "habitat": "Parques y jardines con árboles, campos de cultivo cercanos"
   },
@@ -24,63 +174,9 @@
     "comun": "Gorrión de collar rufo (chingolo)",
     "cientifico": "Zonotrichia capensis",
     "origen": "Nativa",
+    "grupo": "Pájaros",
+    "plumaje": ["#8E7458", "#B4552F"],
     "descripcion": "Pequeño ave de cabeza rayada y collar rufo, común en áreas verdes de gran parte del Perú.",
     "habitat": "Césped, arbustos, jardines y parques"
-  },
-  "Passer_domesticus": {
-    "comun": "Gorrión común",
-    "cientifico": "Passer domesticus",
-    "origen": "Introducida",
-    "descripcion": "Ave pequeña y gregaria, muy ligada a zonas construidas y al ser humano.",
-    "habitat": "Zonas urbanas, cercanía de edificios, parques"
-  },
-  "Mimus_longicaudatus": {
-    "comun": "Calandria de cola larga",
-    "cientifico": "Mimus longicaudatus",
-    "origen": "Nativa",
-    "descripcion": "Ave de cola larga y canto variado, propia de la costa del Pacífico sudamericano.",
-    "habitat": "Parques, jardines, matorrales y áreas abiertas"
-  },
-  "Turdus_chiguanco": {
-    "comun": "Zorzal chiguanco",
-    "cientifico": "Turdus chiguanco",
-    "origen": "Nativa",
-    "descripcion": "Zorzal de plumaje pardo con pico y patas anaranjados, que busca insectos y lombrices en el césped.",
-    "habitat": "Parques con césped y árboles, jardines"
-  },
-  "Pyrocephalus_obscurus": {
-    "comun": "Mosquero bermellón (turtupilín)",
-    "cientifico": "Pyrocephalus obscurus",
-    "origen": "Nativa",
-    "descripcion": "El macho se distingue por su plumaje rojo brillante; caza insectos al vuelo desde perchas bajas.",
-    "habitat": "Áreas con árboles y arbustos, campos, cercanía de agua"
-  },
-  "Amazilia_amazilia": {
-    "comun": "Amazilia costeña (colibrí)",
-    "cientifico": "Amazilia amazilia",
-    "origen": "Nativa",
-    "descripcion": "Colibrí de la costa que se alimenta del néctar de flores de parques y jardines.",
-    "habitat": "Jardines y parques con plantas con flores"
-  },
-  "Falco_sparverius": {
-    "comun": "Cernícalo americano",
-    "cientifico": "Falco sparverius",
-    "origen": "Nativa",
-    "descripcion": "Pequeño halcón que suele observarse posado en lugares altos o cerniéndose en el aire.",
-    "habitat": "Parques amplios, torres, postes y edificios altos"
-  },
-  "Coragyps_atratus": {
-    "comun": "Gallinazo de cabeza negra",
-    "cientifico": "Coragyps atratus",
-    "origen": "Nativa",
-    "descripcion": "Ave carroñera de plumaje negro que planea sobre la ciudad y cumple un rol en la limpieza del entorno.",
-    "habitat": "Cielo urbano, zonas con residuos, parques y áreas abiertas"
-  },
-  "Larus_dominicanus": {
-    "comun": "Gaviota dominicana",
-    "cientifico": "Larus dominicanus",
-    "origen": "Nativa",
-    "descripcion": "Gaviota grande de dorso negro, común en el litoral y en áreas urbanas cercanas al mar.",
-    "habitat": "Costa, malecones y parques cercanos al litoral"
   }
 }

@@ -3,269 +3,694 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Aves Urbanas de Lima</title>
+<title>Aves urbanas de Lima</title>
+<meta name="description" content="Reconoce aves urbanas de Lima a partir de una foto. El modelo de visión computacional corre en tu navegador.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;700&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
 <style>
+  /* Paleta: gris de garúa, tinta del Pacífico y un azul mar para las acciones.
+     El color de verdad lo ponen las aves: cada especie trae los dos tonos de su plumaje. */
   :root{
-    --bg:#f5f3ec; --card:#fff; --ink:#1f2a24; --muted:#66736b; --accent:#2f7d5b;
-    --accent-2:#e8f2ec; --warn:#b45309; --line:#e2ded2;
+    --bg:#e8edee; --surface:#f7f9f9; --ink:#0f2b36; --muted:#4b636d; --line:#c5d1d5; --line-strong:#8fa4ab;
+    --accent:#0b6e7c; --on-accent:#ffffff; --soft:#d5e4e7;
+    --warn:#9a4a12; --warn-bg:#f8e7d6; --ok:#2e9a62;
+    --display:"Familjen Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   }
   @media (prefers-color-scheme: dark){
-    :root{ --bg:#141a16; --card:#1c241f; --ink:#e8efe9; --muted:#9aa8a0; --accent:#5fc08f;
-           --accent-2:#22322a; --warn:#f0a95a; --line:#2c3a32; }
+    :root{
+      --bg:#0b1a20; --surface:#112630; --ink:#e3eef0; --muted:#9db4bb; --line:#26414b; --line-strong:#4a7586;
+      --accent:#5cc5d3; --on-accent:#06242b; --soft:#173540;
+      --warn:#f2b27a; --warn-bg:#3a2a1b; --ok:#4cc888;
+    }
   }
   *{box-sizing:border-box}
-  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
-  header{padding:28px 16px 8px;max-width:960px;margin:0 auto}
-  h1{margin:0 0 4px;font-size:1.7rem}
-  header p{margin:0;color:var(--muted)}
-  main{max-width:960px;margin:0 auto;padding:16px;display:grid;gap:16px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
-  h2{margin:0 0 12px;font-size:1.1rem}
-  #drop{border:2px dashed var(--line);border-radius:12px;padding:28px;text-align:center;color:var(--muted);cursor:pointer}
-  #drop.over{border-color:var(--accent);background:var(--accent-2)}
-  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;justify-content:center}
-  button,.btn{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:9px 14px;font-size:.95rem;cursor:pointer}
-  button.sec{background:transparent;color:var(--accent);border:1px solid var(--accent)}
-  button:disabled{opacity:.5;cursor:not-allowed}
-  #estado{margin:10px 0 0;font-size:.9rem;color:var(--muted)}
-  #estado.err{color:var(--warn)}
-  .resultado{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:18px}
-  @media (max-width:700px){.resultado{grid-template-columns:1fr}}
-  #preview{width:100%;max-height:340px;object-fit:contain;border-radius:10px;background:var(--accent-2)}
-  .barra{margin:8px 0}
-  .barra .top{display:flex;justify-content:space-between;font-size:.92rem}
-  .barra .fondo{height:10px;background:var(--accent-2);border-radius:6px;overflow:hidden}
-  .barra .nivel{height:100%;background:var(--accent)}
-  .aviso{background:var(--accent-2);border-left:4px solid var(--warn);padding:8px 12px;border-radius:6px;font-size:.9rem;margin:10px 0}
-  .ficha h3{margin:12px 0 2px}
-  .ficha em{color:var(--muted)}
-  label{display:block;font-size:.9rem;margin:8px 0 4px}
-  input[type=text]{width:100%;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
-  .checks{display:flex;gap:12px;flex-wrap:wrap;font-size:.92rem}
-  .checks label{display:flex;align-items:center;gap:6px;margin:0}
-  table{width:100%;border-collapse:collapse;font-size:.9rem}
-  th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left}
-  th{color:var(--muted);font-weight:600}
-  .tablewrap{overflow-x:auto}
-  footer{max-width:960px;margin:0 auto;padding:8px 16px 32px;color:var(--muted);font-size:.82rem}
-  .oculto{display:none}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font:400 1rem/1.6 var(--body);-webkit-font-smoothing:antialiased}
+  [hidden]{display:none!important}
+  h1,h2,h3{font-family:var(--display);margin:0;line-height:1.1;letter-spacing:-.01em}
+  p{margin:0}
+  a{color:inherit}
+  :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+
+  /* Cabecera */
+  .top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;padding-top:18px;padding-bottom:18px}
+  .logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;font:700 1.15rem/1 var(--display);color:var(--ink);white-space:nowrap}
+  .logo svg{width:28px;height:28px;color:var(--accent)}
+  .top nav{display:flex;gap:22px}
+  .top nav a{text-decoration:none;color:var(--muted);font-weight:500;padding:6px 0;border-bottom:2px solid transparent}
+  .top nav a:hover{color:var(--ink);border-bottom-color:var(--accent)}
+
+  /* Botones */
+  .btn{font:600 .95rem/1 var(--body);padding:12px 18px;border-radius:6px;border:1.5px solid var(--accent);background:var(--accent);color:var(--on-accent);cursor:pointer}
+  .btn:hover{filter:brightness(1.08)}
+  .btn.sec{background:transparent;color:var(--accent)}
+  .btn.sec:hover{background:var(--soft);filter:none}
+
+  /* Portada: la herramienta es lo primero */
+  .hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:48px;align-items:center;padding-top:28px;padding-bottom:56px}
+  .hero h1{font-size:clamp(2.4rem,5.4vw,4.2rem);font-weight:700;line-height:1.02;letter-spacing:-.025em;max-width:11ch}
+  .lead{margin-top:20px;max-width:40ch;font-size:1.12rem;color:var(--muted)}
+  .estado{display:inline-flex;align-items:center;gap:9px;margin-top:26px;padding:7px 14px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:.92rem}
+  .estado i{width:9px;height:9px;border-radius:50%;background:var(--muted)}
+  .estado[data-tipo=carga] i{animation:pulso 1.2s ease-in-out infinite}
+  .estado[data-tipo=listo] i{background:var(--ok)}
+  .estado[data-tipo=error] i{background:var(--warn)}
+  @keyframes pulso{50%{opacity:.25}}
+
+  .zona{background:var(--surface);border:2px dashed var(--line);border-radius:8px;padding:28px;min-height:340px;display:flex;flex-direction:column;justify-content:center}
+  .zona.sobre{border-color:var(--accent);border-style:solid;background:var(--soft)}
+  .dz-vacio{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px}
+  .dz-ico{width:54px;height:54px;color:var(--accent);margin-bottom:6px}
+  .dz-titulo{font:700 1.6rem/1.15 var(--display)}
+  .dz-ayuda{color:var(--muted);max-width:34ch}
+  .acciones{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px}
+  .vista{position:relative;border-radius:6px;overflow:hidden;background:var(--soft)}
+  .vista img{display:block;width:100%;max-height:360px;object-fit:contain}
+  .analizando{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:12px;background:color-mix(in srgb,var(--bg) 78%,transparent);backdrop-filter:blur(3px);font-weight:600}
+  .spin{width:22px;height:22px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:giro .8s linear infinite}
+  @keyframes giro{to{transform:rotate(360deg)}}
+
+  /* Ficha de color: el motivo de la página */
+  .chip{--c1:#8a979c;--c2:#4b5a60;aspect-ratio:1;border-radius:4px;background:linear-gradient(135deg,var(--c1) 0 54%,var(--c2) 54% 100%);box-shadow:inset 0 0 0 1px rgb(0 0 0 / .14)}
+  .chip.entra{animation:cortar .7s cubic-bezier(.2,.7,.2,1) both}
+  @keyframes cortar{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+
+  /* Resultado */
+  #resultado{padding-bottom:64px}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:30px}
+  .res-vacio{color:var(--muted);max-width:56ch}
+  .res-cab{display:grid;grid-template-columns:170px minmax(0,1fr) minmax(220px,290px);gap:30px;align-items:center}
+  .res-cab h2{font-size:clamp(1.9rem,3.6vw,2.8rem);font-weight:700}
+  .sci{margin-top:6px;font-size:1.15rem;font-style:italic;color:var(--muted)}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .tag{padding:3px 11px;border:1px solid var(--line);border-radius:999px;font-size:.85rem;color:var(--muted)}
+  .seg-num{font:700 3.4rem/1 var(--display);letter-spacing:-.03em}
+  .seg-num small{font-size:1.5rem;margin-left:2px}
+  .seg-txt{margin-top:6px;color:var(--muted)}
+  .meter{height:10px;border-radius:5px;background:var(--soft);margin-top:12px;overflow:hidden}
+  .meter i{display:block;height:100%;width:0;background:var(--accent);border-radius:5px;transition:width .8s cubic-bezier(.2,.7,.2,1)}
+  .aviso{margin-top:22px;padding:12px 16px;border-radius:6px;background:var(--warn-bg);color:var(--warn);font-weight:500}
+  .res-cuerpo{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:40px;margin-top:30px;padding-top:26px;border-top:1px solid var(--line)}
+  .res-cuerpo h3,.reg h3{font-size:1.05rem;margin-bottom:10px}
+  .res-cuerpo p{max-width:58ch}
+  .res-cuerpo p + p{margin-top:10px}
+  .otras{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+  .otras li{display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:baseline}
+  .otras .meter{grid-column:1 / -1;height:6px;margin-top:2px}
+  .otras .meter i{background:var(--muted)}
+
+  /* Registro de la observación */
+  .reg{margin-top:30px;padding-top:26px;border-top:1px solid var(--line)}
+  .campo{display:grid;gap:6px;max-width:420px;margin-bottom:16px}
+  .campo label,.legend{font-weight:600;font-size:.95rem}
+  input[type=text],input[type=search],select{font:inherit;color:var(--ink);background:var(--surface);border:1.5px solid var(--line-strong);border-radius:6px;padding:10px 12px;width:100%}
+  input:focus-visible,select:focus-visible{border-color:var(--accent)}
+  fieldset{border:0;margin:0 0 18px;padding:0}
+  .pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .pill{position:relative}
+  .pill input{position:absolute;opacity:0;inset:0;cursor:pointer}
+  .pill span{display:inline-block;padding:7px 14px;border:1.5px solid var(--line-strong);border-radius:999px;font-size:.92rem;background:transparent}
+  .pill input:checked + span{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+  .pill input:focus-visible + span{outline:3px solid var(--accent);outline-offset:2px}
+
+  /* Secciones */
+  /* la línea divisoria queda alineada con el contenido, no con el borde del contenedor */
+  .seccion,.pie{background:linear-gradient(var(--line),var(--line)) center top / calc(100% - 40px) 1px no-repeat}
+  .seccion{padding-top:56px;padding-bottom:64px}
+  .seccion h2{font-size:clamp(1.8rem,3.4vw,2.5rem);font-weight:700}
+  .seccion .sub{margin-top:10px;color:var(--muted);max-width:56ch}
+  .barra-filtros{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:center;margin-top:26px}
+  .barra-filtros input[type=search]{width:260px;max-width:100%}
+  .barra-filtros select{width:auto;min-width:190px}
+  .filtros{display:flex;gap:8px;flex-wrap:wrap}
+  .filtros button{font:500 .92rem var(--body);padding:8px 14px;border:1.5px solid var(--line-strong);border-radius:999px;background:transparent;color:var(--ink);cursor:pointer}
+  .filtros button[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+  .cuenta{margin-top:18px;color:var(--muted);font-size:.92rem}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;list-style:none;margin:14px 0 0;padding:0}
+  .tile{display:flex;flex-direction:column;width:100%;height:100%;text-align:left;padding:0;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:inherit;font:inherit;cursor:pointer;overflow:hidden}
+  .tile:hover{border-color:var(--accent)}
+  .tile .chip{aspect-ratio:3/2;border-radius:0}
+  .tile-nombre{padding:10px 11px 0;font:700 1.02rem/1.2 var(--display)}
+  .tile-sci{padding:3px 11px 0;font-style:italic;font-size:.85rem;color:var(--muted)}
+  .tile-origen{padding:6px 11px 11px;font-size:.82rem;color:var(--muted)}
+  .nota{margin-top:18px;color:var(--muted);font-size:.9rem}
+
+  /* Observaciones guardadas */
+  .frase{margin-top:22px;font-size:1.15rem}
+  .frase strong{font:700 1.5rem var(--display)}
+  .reg-cols{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:44px;margin-top:26px}
+  .tabla{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:.95rem}
+  th,td{padding:10px 12px 10px 0;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{font-weight:600;color:var(--muted);font-size:.88rem}
+  .vistas{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+  .vistas li{display:grid;grid-template-columns:minmax(110px,190px) 1fr 3ch;gap:12px;align-items:center;font-size:.93rem}
+  .vistas .meter{margin:0;height:12px}
+  .vistas .meter i{background:var(--c,var(--accent));box-shadow:inset 0 0 0 1px rgb(128 128 128 / .55)}
+  .vistas b{text-align:right;font-weight:600}
+  .acciones-reg{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px}
+
+  /* Pie */
+  .pie{padding-top:28px;padding-bottom:48px;color:var(--muted);font-size:.9rem}
+  .pie p{max-width:70ch}
+  .pie p + p{margin-top:8px}
+
+  /* Ficha emergente */
+  dialog{border:0;padding:0;border-radius:8px;background:var(--surface);color:var(--ink);width:min(560px,calc(100vw - 32px))}
+  dialog::backdrop{background:rgb(8 20 26 / .62)}
+  .dlg-in{padding:26px;display:grid;grid-template-columns:110px minmax(0,1fr);gap:20px}
+  .dlg-in h2{font-size:1.7rem}
+  .dlg-cuerpo{grid-column:1 / -1}
+  .dlg-cuerpo p + p{margin-top:10px}
+  .dlg-cerrar{grid-column:1 / -1;justify-self:end}
+
+  /* Aviso breve */
+  #toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);max-width:calc(100vw - 32px);padding:12px 18px;border-radius:6px;background:var(--ink);color:var(--bg);font-weight:500;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:20}
+  #toast.ver{opacity:1;transform:translate(-50%,0)}
+
+  @media (max-width:900px){
+    .hero{grid-template-columns:1fr;gap:32px}
+    .hero h1{max-width:none}
+    .res-cab{grid-template-columns:120px minmax(0,1fr);gap:20px}
+    .seguridad{grid-column:1 / -1}
+    .res-cuerpo,.reg-cols{grid-template-columns:1fr;gap:28px}
+  }
+  @media (max-width:520px){
+    .top nav{gap:14px;font-size:.92rem}
+    .panel{padding:20px}
+    .zona{padding:20px;min-height:300px}
+    .res-cab{grid-template-columns:90px minmax(0,1fr)}
+    .vistas li{grid-template-columns:1fr 3ch}
+    .vistas li .meter{grid-column:1 / -1;grid-row:2}
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  }
 </style>
 </head>
 <body>
-<header>
-  <h1>Aves urbanas de Lima</h1>
-  <p>Sube una foto y el modelo de visión computacional te dirá qué especie es. Luego regístrala en el parque donde la viste.</p>
+
+<header class="wrap top">
+  <a class="logo" href="#reconocer">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M5 20c0-6 5-11 11-11 3 0 5 1 7 3l5-1-3 4c0 7-6 12-13 12-4 0-7-3-7-7z"/><circle cx="20.5" cy="12.5" r="1.4" fill="var(--bg)"/></svg>
+    <span>Aves urbanas de Lima</span>
+  </a>
+  <nav aria-label="Secciones">
+    <a href="#reconocer">Reconocer</a>
+    <a href="#catalogo">Catálogo</a>
+    <a href="#registro">Registro</a>
+  </nav>
 </header>
 
 <main>
-  <section class="card">
-    <h2>1. Reconocer un ave</h2>
-    <div id="drop" tabindex="0">Arrastra una foto aquí o usa los botones</div>
-    <div class="row">
-      <button id="btnSubir">Subir foto</button>
-      <button id="btnCamara" class="sec">Usar cámara</button>
+  <section class="wrap hero" id="reconocer">
+    <div>
+      <h1>¿Qué ave de Lima es esta?</h1>
+      <p class="lead">Sube o toma una foto y el modelo te dice qué especie es. Todo ocurre en tu navegador: la foto no sale de tu dispositivo.</p>
+      <p class="estado" id="estado" data-tipo="carga"><i></i><span id="estadoTxt">Cargando el modelo…</span></p>
     </div>
-    <input id="archivo" type="file" accept="image/*" class="oculto">
-    <input id="camara" type="file" accept="image/*" capture="environment" class="oculto">
-    <p id="estado">Cargando modelo…</p>
+
+    <div>
+      <div class="zona" id="zona">
+        <div class="dz-vacio" id="dzVacio">
+          <svg class="dz-ico" viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M5 20c0-6 5-11 11-11 3 0 5 1 7 3l5-1-3 4c0 7-6 12-13 12-4 0-7-3-7-7z"/><circle cx="20.5" cy="12.5" r="1.4" fill="var(--surface)"/></svg>
+          <p class="dz-titulo">Suelta una foto aquí</p>
+          <p class="dz-ayuda">JPG, PNG o WEBP. Funciona mejor si el ave se ve completa y de cerca.</p>
+          <div class="acciones">
+            <button class="btn" id="btnSubir" type="button">Elegir foto</button>
+            <button class="btn sec" id="btnCamara" type="button">Tomar foto</button>
+          </div>
+        </div>
+        <div id="dzVista" hidden>
+          <div class="vista">
+            <img id="foto" alt="La foto que subiste">
+            <div class="analizando" id="analizando" hidden><span class="spin"></span>Analizando la foto…</div>
+          </div>
+          <div class="acciones">
+            <button class="btn sec" id="btnOtra" type="button">Elegir otra foto</button>
+            <button class="btn sec" id="btnOtraCam" type="button">Tomar otra foto</button>
+          </div>
+        </div>
+      </div>
+      <input id="archivo" type="file" accept="image/*" hidden>
+      <input id="camara" type="file" accept="image/*" capture="environment" hidden>
+    </div>
   </section>
 
-  <section id="panelResultado" class="card oculto">
-    <h2>Resultado</h2>
-    <div class="resultado">
-      <img id="preview" alt="Foto subida">
-      <div>
-        <div id="barras"></div>
-        <div id="aviso" class="aviso oculto"></div>
-        <div id="ficha" class="ficha"></div>
+  <section class="wrap" id="resultado" aria-live="polite">
+    <div class="panel">
+      <p class="res-vacio" id="resVacio">Cuando subas una foto, aquí verás la especie, qué tan seguro está el modelo y dónde puedes encontrarla en la ciudad.</p>
+
+      <div id="res" hidden>
+        <div class="res-cab">
+          <div class="chip" id="rChip"></div>
+          <div>
+            <h2 id="rNombre"></h2>
+            <p class="sci" id="rSci"></p>
+            <div class="tags"><span class="tag" id="rOrigen"></span><span class="tag" id="rGrupo"></span></div>
+          </div>
+          <div class="seguridad">
+            <p class="seg-num"><span id="rPct">0</span><small>%</small></p>
+            <p class="seg-txt">Seguridad del modelo: <strong id="rNivel"></strong></p>
+            <div class="meter"><i id="rMeter"></i></div>
+          </div>
+        </div>
+
+        <p class="aviso" id="rAviso" hidden>El modelo no está seguro. Puede ser una especie que no está en el catálogo o la foto no se ve bien. Prueba con otra foto en la que el ave se vea completa.</p>
+
+        <div class="res-cuerpo">
+          <div>
+            <h3>Sobre esta especie</h3>
+            <p id="rDesc"></p>
+            <p id="rHabitatP"><strong>Dónde verla:</strong> <span id="rHabitat"></span></p>
+          </div>
+          <div>
+            <h3>También podría ser</h3>
+            <ul class="otras" id="rOtras"></ul>
+          </div>
+        </div>
+
+        <form class="reg" id="formReg" autocomplete="off">
+          <h3>Anota dónde la viste</h3>
+          <div class="campo">
+            <label for="parque">Parque o lugar</label>
+            <input id="parque" type="text" list="listaParques" placeholder="Por ejemplo: Parque Kennedy" maxlength="80">
+            <datalist id="listaParques"></datalist>
+          </div>
+          <fieldset>
+            <legend class="legend">Cómo es el lugar</legend>
+            <div class="pills" id="caracts"></div>
+          </fieldset>
+          <button class="btn" id="btnGuardar" type="submit">Guardar observación</button>
+        </form>
       </div>
     </div>
   </section>
 
-  <section id="panelRegistro" class="card oculto">
-    <h2>2. Registrar observación en un parque</h2>
-    <label for="parque">Nombre del parque o espacio</label>
-    <input id="parque" type="text" placeholder="Ej.: Parque Kennedy, Parque de la Exposición…">
-    <label>Características del espacio</label>
-    <div class="checks" id="caracts">
-      <label><input type="checkbox" value="Muchos árboles"> Muchos árboles</label>
-      <label><input type="checkbox" value="Césped amplio"> Césped amplio</label>
-      <label><input type="checkbox" value="Cuerpo de agua"> Cuerpo de agua</label>
-      <label><input type="checkbox" value="Flores/jardines"> Flores/jardines</label>
-      <label><input type="checkbox" value="Zona muy construida"> Zona muy construida</label>
-      <label><input type="checkbox" value="Cerca del mar"> Cerca del mar</label>
+  <section class="wrap seccion" id="catalogo">
+    <h2>Catálogo de especies</h2>
+    <p class="sub">Las aves que el modelo sabe reconocer. Cada ficha de color muestra los dos tonos principales del plumaje.</p>
+    <div class="barra-filtros">
+      <input id="buscar" type="search" placeholder="Buscar por nombre" aria-label="Buscar por nombre">
+      <div class="filtros" id="filtroOrigen" role="group" aria-label="Filtrar por origen">
+        <button type="button" data-origen="todas" aria-pressed="true">Todas</button>
+        <button type="button" data-origen="nativa" aria-pressed="false">Nativas</button>
+        <button type="button" data-origen="introducida" aria-pressed="false">Introducidas</button>
+      </div>
+      <select id="filtroGrupo" aria-label="Filtrar por grupo"></select>
     </div>
-    <div class="row" style="justify-content:flex-start">
-      <button id="btnGuardar">Guardar observación</button>
-    </div>
+    <p class="cuenta" id="cuenta"></p>
+    <ul class="grid" id="grid"></ul>
+    <p class="nota" id="vacioCat" hidden>No hay especies con esos filtros. Prueba quitar alguno.</p>
+    <p class="nota">Los colores son una referencia aproximada del plumaje, no una foto de la especie.</p>
   </section>
 
-  <section class="card">
-    <h2>3. Registro y resumen por parque</h2>
-    <p id="vacio" style="color:var(--muted);margin:0">Aún no hay observaciones guardadas.</p>
-    <div id="resumen" class="tablewrap"></div>
-    <div class="row" style="justify-content:flex-start">
-      <button id="btnCsv" class="sec">Descargar CSV</button>
-      <button id="btnBorrar" class="sec">Borrar registro</button>
+  <section class="wrap seccion" id="registro">
+    <h2>Tus observaciones</h2>
+    <p class="sub">Lo que guardes se queda en este navegador. Puedes descargarlo en CSV para analizarlo.</p>
+    <p class="nota" id="regVacio">Todavía no hay observaciones. Identifica un ave y guárdala para ver aquí el resumen por parque.</p>
+    <div id="regDatos" hidden>
+      <p class="frase" id="regFrase"></p>
+      <div class="reg-cols">
+        <div>
+          <h3 style="margin-bottom:8px;font-size:1.05rem">Por parque</h3>
+          <div class="tabla"><table id="tabla"></table></div>
+        </div>
+        <div>
+          <h3 style="margin-bottom:12px;font-size:1.05rem">Especies más vistas</h3>
+          <ul class="vistas" id="vistas"></ul>
+        </div>
+      </div>
+      <div class="acciones-reg">
+        <button class="btn sec" id="btnCsv" type="button">Descargar CSV</button>
+        <button class="btn sec" id="btnBorrar" type="button">Borrar registro</button>
+      </div>
     </div>
   </section>
 </main>
 
-<footer>
-  Proyecto de Inteligencia Artificial Aplicada. Modelo entrenado con fotos de iNaturalist (licencias Creative Commons).
-  El modelo solo reconoce las especies de su catálogo; con una foto borrosa o de otra especie puede equivocarse.
+<footer class="wrap pie">
+  <p>Proyecto de Inteligencia Artificial Aplicada. El modelo se entrenó con fotos de iNaturalist con licencia Creative Commons.</p>
+  <p>Solo reconoce las especies del catálogo y puede equivocarse, sobre todo con fotos lejanas o borrosas.</p>
+  <p id="pieMetricas" hidden></p>
 </footer>
+
+<dialog id="dlg" aria-labelledby="dNombre">
+  <div class="dlg-in">
+    <div class="chip" id="dChip"></div>
+    <div>
+      <h2 id="dNombre"></h2>
+      <p class="sci" id="dSci"></p>
+      <div class="tags"><span class="tag" id="dOrigen"></span><span class="tag" id="dGrupo"></span></div>
+    </div>
+    <div class="dlg-cuerpo">
+      <p id="dDesc"></p>
+      <p><strong>Dónde verla:</strong> <span id="dHabitat"></span></p>
+    </div>
+    <button class="btn sec dlg-cerrar" id="dCerrar" type="button">Cerrar</button>
+  </div>
+</dialog>
+
+<div id="toast" role="status"></div>
 
 <script>
 const IMG = 224;
-const UMBRAL = 0.50;           // por debajo, se avisa que la identificación es incierta
+const UMBRAL = 0.50;                 // por debajo de esto se avisa que el modelo no está seguro
 const CLAVE = "obs_aves_lima_v1";
-let modelo = null, clases = [], especies = {};
-let ultima = null;             // última predicción {clave, confianza}
+const CARACTS = ["Muchos árboles", "Césped amplio", "Cuerpo de agua", "Flores y jardines", "Zona muy construida", "Cerca del mar"];
+// Opcional: tras entrenar, copia aquí los valores de metricas.json (entre 0 y 1) para mostrarlos en el pie.
+const METRICAS = { top1: null, top3: null };
+
+let modelo = null, clases = [], especies = {}, ultima = null, urlFoto = null;
+const filtro = { origen: "todas", grupo: "todos", q: "" };
 
 const $ = (id) => document.getElementById(id);
-const estado = (txt, err=false) => { $("estado").textContent = txt; $("estado").className = err ? "err" : ""; };
+const norm = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const redondea = (p) => (Math.round(p * 1000) / 10).toFixed(1);
+const plural = (n, uno, varios) => n + " " + (n === 1 ? uno : varios);
+const sinMovimiento = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-function nombreComun(clave){ return (especies[clave] && especies[clave].comun) || clave.replace(/_/g, " "); }
-
-async function iniciar(){
-  try{
-    const [c, e] = await Promise.all([
-      fetch("model/class_names.json").then(r => { if(!r.ok) throw new Error("class_names"); return r.json(); }),
-      fetch("especies.json").then(r => r.json())
-    ]);
-    clases = c; especies = e;
-    modelo = await tf.loadLayersModel("model/model.json");
-    tf.tidy(() => modelo.predict(tf.zeros([1, IMG, IMG, 3])));   // calentamiento
-    estado("Modelo listo (" + clases.length + " especies). Sube una foto.");
-  }catch(err){
-    console.error(err);
-    estado("No se pudo cargar el modelo. Entrena y convierte el modelo (ver README) y abre la página desde un servidor local, no con doble clic.", true);
+function h(tag, attrs, ...hijos){
+  const e = document.createElement(tag);
+  for(const [k, v] of Object.entries(attrs || {})){
+    if(k === "class") e.className = v;
+    else if(k === "text") e.textContent = v;
+    else if(k.startsWith("on")) e[k] = v;
+    else e.setAttribute(k, v);
   }
-  pintarResumen();
+  hijos.flat().forEach((c) => { if(c != null) e.append(c.nodeType ? c : document.createTextNode(c)); });
+  return e;
 }
 
-function leerArchivo(f){
-  if(!f || !f.type.startsWith("image/")) return;
-  const img = $("preview");
+function ficha(clave){
+  const e = especies[clave] || {};
+  const nombre = clave.replace(/_/g, " ");
+  return {
+    clave,
+    comun: e.comun || nombre,
+    cientifico: e.cientifico || nombre,
+    origen: e.origen || "",
+    grupo: e.grupo || "Otras",
+    descripcion: e.descripcion || "",
+    habitat: e.habitat || "",
+    plumaje: Array.isArray(e.plumaje) && e.plumaje.length >= 2 ? e.plumaje : ["#8a979c", "#4b5a60"]
+  };
+}
+function pintarChip(el, f){ el.style.setProperty("--c1", f.plumaje[0]); el.style.setProperty("--c2", f.plumaje[1]); }
+function claves(){ return clases.length ? clases : Object.keys(especies); }
+
+function estadoModelo(tipo, texto){ $("estado").dataset.tipo = tipo; $("estadoTxt").textContent = texto; }
+
+let tToast;
+function toast(msg){
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.add("ver");
+  clearTimeout(tToast);
+  tToast = setTimeout(() => t.classList.remove("ver"), 3400);
+}
+
+/* ---------- Inicio ---------- */
+async function iniciar(){
+  construirCaracts();
+  pintarResumen();
+  pintarPie();
+  estadoModelo("carga", "Cargando el modelo…");
+  try{
+    const r = await fetch("especies.json");
+    if(!r.ok) throw new Error("especies.json");
+    especies = await r.json();
+  }catch(e){ console.error(e); }
+  try{
+    const r = await fetch("model/class_names.json");
+    if(!r.ok) throw new Error("class_names.json");
+    clases = await r.json();
+  }catch(e){ console.error(e); clases = []; }
+  construirFiltros();
+  pintarCatalogo();
+  try{
+    modelo = await tf.loadLayersModel("model/model.json");
+    tf.tidy(() => modelo.predict(tf.zeros([1, IMG, IMG, 3])));     // calentamiento
+    estadoModelo("listo", "Modelo listo: reconoce " + claves().length + " especies");
+  }catch(e){
+    console.error(e);
+    estadoModelo("error", "No se pudo cargar el modelo. Recarga la página.");
+  }
+}
+
+/* ---------- Subir y analizar la foto ---------- */
+function leerArchivo(file){
+  if(!file) return;
+  if(!file.type.startsWith("image/")){ toast("Elige una imagen en formato JPG, PNG o WEBP."); return; }
+  if(urlFoto) URL.revokeObjectURL(urlFoto);
+  urlFoto = URL.createObjectURL(file);
+  const img = $("foto");
   img.onload = () => predecir(img);
-  img.src = URL.createObjectURL(f);
-  $("panelResultado").classList.remove("oculto");
+  img.onerror = () => {
+    toast("No se pudo abrir esa imagen. Prueba con un JPG o un PNG.");
+    $("dzVista").hidden = true; $("dzVacio").hidden = false;
+  };
+  img.src = urlFoto;
+  $("dzVacio").hidden = true;
+  $("dzVista").hidden = false;
 }
 
 async function predecir(img){
-  if(!modelo){ estado("El modelo aún no está disponible.", true); return; }
-  const salida = tf.tidy(() => {
-    const x = tf.browser.fromPixels(img).resizeBilinear([IMG, IMG]).toFloat()
-      .div(127.5).sub(1).expandDims(0);          // mismo preprocesado que MobileNetV2
-    return modelo.predict(x);
-  });
-  const p = Array.from(await salida.data());
-  salida.dispose();
-  const top = p.map((v, i) => ({ clave: clases[i], prob: v })).sort((a, b) => b.prob - a.prob).slice(0, 3);
-  ultima = { clave: top[0].clave, confianza: top[0].prob };
-  pintarResultado(top);
+  if(!modelo){ toast("El modelo todavía no está listo. Espera unos segundos e inténtalo de nuevo."); return; }
+  $("analizando").hidden = false;
+  await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 30)));
+  try{
+    const salida = tf.tidy(() => {
+      const x = tf.browser.fromPixels(img).resizeBilinear([IMG, IMG]).toFloat()
+        .div(127.5).sub(1).expandDims(0);               // mismo preprocesado que MobileNetV2
+      return modelo.predict(x);
+    });
+    const p = Array.from(await salida.data());
+    salida.dispose();
+    const top = p.map((v, i) => ({ clave: clases[i], prob: v }))
+      .filter((t) => t.clave)
+      .sort((a, b) => b.prob - a.prob).slice(0, 3);
+    mostrarResultado(top);
+  }catch(e){
+    console.error(e);
+    toast("No se pudo analizar la foto. Prueba con otra.");
+  }finally{
+    $("analizando").hidden = true;
+  }
 }
 
-function pintarResultado(top){
-  const cont = $("barras"); cont.textContent = "";
-  top.forEach(t => {
-    const b = document.createElement("div"); b.className = "barra";
-    const fila = document.createElement("div"); fila.className = "top";
-    const n = document.createElement("span"); n.textContent = nombreComun(t.clave);
-    const v = document.createElement("strong"); v.textContent = (t.prob * 100).toFixed(1) + "%";
-    fila.append(n, v);
-    const fondo = document.createElement("div"); fondo.className = "fondo";
-    const nivel = document.createElement("div"); nivel.className = "nivel"; nivel.style.width = (t.prob * 100) + "%";
-    fondo.appendChild(nivel); b.append(fila, fondo); cont.appendChild(b);
-  });
-  const aviso = $("aviso");
-  if(top[0].prob < UMBRAL){
-    aviso.textContent = "Confianza baja: podría ser una especie fuera del catálogo o la foto no es clara. Prueba con otra foto.";
-    aviso.classList.remove("oculto");
-  } else aviso.classList.add("oculto");
+function mostrarResultado(top){
+  const f = ficha(top[0].clave), p = top[0].prob;
+  ultima = { clave: f.clave, confianza: p };
+  $("resVacio").hidden = true;
+  $("res").hidden = false;
 
-  const e = especies[top[0].clave] || {};
-  const f = $("ficha"); f.textContent = "";
-  const h = document.createElement("h3"); h.textContent = nombreComun(top[0].clave);
-  const sci = document.createElement("em"); sci.textContent = e.cientifico || top[0].clave.replace(/_/g, " ");
-  f.append(h, sci);
-  [["Origen", e.origen], ["Descripción", e.descripcion], ["Dónde verla", e.habitat]].forEach(([k, v]) => {
-    if(!v) return;
-    const p = document.createElement("p"); p.style.margin = "6px 0";
-    const s = document.createElement("strong"); s.textContent = k + ": ";
-    p.append(s, document.createTextNode(v)); f.appendChild(p);
+  const chip = $("rChip");
+  pintarChip(chip, f);
+  chip.classList.remove("entra"); void chip.offsetWidth; chip.classList.add("entra");
+
+  $("rNombre").textContent = f.comun;
+  $("rSci").textContent = f.cientifico;
+  $("rOrigen").textContent = f.origen || "Origen sin dato";
+  $("rGrupo").textContent = f.grupo;
+
+  $("rPct").textContent = redondea(p);
+  $("rNivel").textContent = p >= 0.75 ? "alta" : (p >= UMBRAL ? "media" : "baja");
+  const m = $("rMeter");
+  m.style.width = "0";
+  requestAnimationFrame(() => requestAnimationFrame(() => { m.style.width = (p * 100) + "%"; }));
+  $("rAviso").hidden = p >= UMBRAL;
+
+  $("rDesc").textContent = f.descripcion;
+  $("rDesc").hidden = !f.descripcion;
+  $("rHabitat").textContent = f.habitat;
+  $("rHabitatP").hidden = !f.habitat;
+
+  const otras = $("rOtras"); otras.textContent = "";
+  top.slice(1).forEach((t) => {
+    const g = ficha(t.clave);
+    const fill = h("i");
+    fill.style.width = (t.prob * 100) + "%";
+    otras.appendChild(h("li", {},
+      h("span", { text: g.comun }),
+      h("strong", { text: redondea(t.prob) + "%" }),
+      h("div", { class: "meter" }, fill)));
   });
-  $("panelRegistro").classList.remove("oculto");
+
+  $("resultado").scrollIntoView({ behavior: sinMovimiento() ? "auto" : "smooth", block: "start" });
 }
 
-/* ---------- Registro por parque (localStorage) ---------- */
+/* ---------- Catálogo ---------- */
+function construirFiltros(){
+  const grupos = [...new Set(claves().map((k) => ficha(k).grupo))].sort((a, b) => a.localeCompare(b, "es"));
+  const sel = $("filtroGrupo"); sel.textContent = "";
+  sel.appendChild(h("option", { value: "todos", text: "Todos los grupos" }));
+  grupos.forEach((g) => sel.appendChild(h("option", { value: g, text: g })));
+}
+
+function pintarCatalogo(){
+  const cont = $("grid"); cont.textContent = "";
+  const todas = claves().map(ficha);
+  const q = norm(filtro.q);
+  const items = todas.filter((f) =>
+    (filtro.origen === "todas" || norm(f.origen) === filtro.origen) &&
+    (filtro.grupo === "todos" || f.grupo === filtro.grupo) &&
+    (!q || norm(f.comun).includes(q) || norm(f.cientifico).includes(q))
+  ).sort((a, b) => a.comun.localeCompare(b.comun, "es"));
+  $("cuenta").textContent = items.length === todas.length
+    ? plural(todas.length, "especie", "especies")
+    : items.length + " de " + todas.length + " especies";
+  $("vacioCat").hidden = items.length > 0;
+  items.forEach((f) => {
+    const chip = h("div", { class: "chip" });
+    pintarChip(chip, f);
+    cont.appendChild(h("li", {},
+      h("button", { class: "tile", type: "button", onclick: () => abrirFicha(f.clave) },
+        chip,
+        h("span", { class: "tile-nombre", text: f.comun }),
+        h("span", { class: "tile-sci", text: f.cientifico }),
+        h("span", { class: "tile-origen", text: f.origen }))));
+  });
+}
+
+function abrirFicha(clave){
+  const f = ficha(clave);
+  pintarChip($("dChip"), f);
+  $("dNombre").textContent = f.comun;
+  $("dSci").textContent = f.cientifico;
+  $("dOrigen").textContent = f.origen || "Origen sin dato";
+  $("dGrupo").textContent = f.grupo;
+  $("dDesc").textContent = f.descripcion;
+  $("dHabitat").textContent = f.habitat || "Sin dato";
+  const d = $("dlg");
+  if(typeof d.showModal === "function") d.showModal(); else d.setAttribute("open", "");
+}
+
+/* ---------- Observaciones (se guardan en este navegador) ---------- */
 function leerRegistro(){ try{ return JSON.parse(localStorage.getItem(CLAVE)) || []; }catch(e){ return []; } }
-function escribirRegistro(r){ try{ localStorage.setItem(CLAVE, JSON.stringify(r)); }catch(e){ estado("No se pudo guardar en este navegador.", true); } }
+function escribirRegistro(r){ try{ localStorage.setItem(CLAVE, JSON.stringify(r)); return true; }catch(e){ return false; } }
 
-function guardar(){
+function construirCaracts(){
+  const cont = $("caracts"); cont.textContent = "";
+  CARACTS.forEach((c) => cont.appendChild(h("label", { class: "pill" },
+    h("input", { type: "checkbox", value: c }), h("span", { text: c }))));
+}
+
+function guardar(ev){
+  ev.preventDefault();
+  if(!ultima) return;
   const parque = $("parque").value.trim();
-  if(!ultima){ return; }
-  if(!parque){ estado("Escribe el nombre del parque antes de guardar.", true); return; }
-  const caract = [...document.querySelectorAll("#caracts input:checked")].map(i => i.value);
+  if(!parque){ toast("Escribe el nombre del parque o lugar antes de guardar."); $("parque").focus(); return; }
+  const caract = [...document.querySelectorAll("#caracts input:checked")].map((i) => i.value);
   const r = leerRegistro();
   r.push({ fecha: new Date().toISOString(), parque, especie: ultima.clave, confianza: +ultima.confianza.toFixed(3), caract });
-  escribirRegistro(r);
-  estado("Observación guardada.");
+  if(!escribirRegistro(r)){ toast("Tu navegador no permite guardar datos. Descarga el CSV al terminar."); return; }
+  toast("Observación guardada en " + parque + ".");
   pintarResumen();
 }
 
-function celda(tr, txt, th=false){ const c = document.createElement(th ? "th" : "td"); c.textContent = txt; tr.appendChild(c); }
-
 function pintarResumen(){
   const r = leerRegistro();
-  $("vacio").classList.toggle("oculto", r.length > 0);
-  const cont = $("resumen"); cont.textContent = "";
+  const dl = $("listaParques"); dl.textContent = "";
+  [...new Set(r.map((o) => o.parque))].forEach((p) => dl.appendChild(h("option", { value: p })));
+  $("regVacio").hidden = r.length > 0;
+  $("regDatos").hidden = r.length === 0;
   if(!r.length) return;
-  const porParque = {};
-  r.forEach(o => {
-    const p = porParque[o.parque] = porParque[o.parque] || { n: 0, esp: new Set(), caract: new Set() };
-    p.n++; p.esp.add(o.especie); o.caract.forEach(c => p.caract.add(c));
+
+  const porParque = {}, conteo = {};
+  r.forEach((o) => {
+    const p = porParque[o.parque] = porParque[o.parque] || { n: 0, esp: new Set(), car: new Set() };
+    p.n++; p.esp.add(o.especie); (o.caract || []).forEach((c) => p.car.add(c));
+    conteo[o.especie] = (conteo[o.especie] || 0) + 1;
   });
-  const t = document.createElement("table");
-  const head = document.createElement("tr");
-  ["Parque", "Observaciones", "Especies distintas", "Especies", "Características"].forEach(x => celda(head, x, true));
-  t.appendChild(head);
-  Object.entries(porParque).forEach(([nombre, p]) => {
-    const tr = document.createElement("tr");
-    celda(tr, nombre); celda(tr, p.n); celda(tr, p.esp.size);
-    celda(tr, [...p.esp].map(nombreComun).join(", "));
-    celda(tr, [...p.caract].join(", ") || "—");
-    t.appendChild(tr);
+  const nParques = Object.keys(porParque).length, nEsp = Object.keys(conteo).length;
+  $("regFrase").textContent = "";
+  $("regFrase").append(
+    h("strong", { text: String(r.length) }), r.length === 1 ? " observación en " : " observaciones en ",
+    h("strong", { text: String(nParques) }), nParques === 1 ? " lugar, con " : " lugares, con ",
+    h("strong", { text: String(nEsp) }), nEsp === 1 ? " especie distinta." : " especies distintas.");
+
+  const t = $("tabla"); t.textContent = "";
+  t.appendChild(h("tr", {}, ["Lugar", "Observaciones", "Especies", "Cómo es"].map((x) => h("th", { text: x }))));
+  Object.entries(porParque).sort((a, b) => b[1].n - a[1].n).forEach(([nombre, p]) => {
+    t.appendChild(h("tr", {},
+      h("td", { text: nombre }),
+      h("td", { text: String(p.n) }),
+      h("td", { text: [...p.esp].map((k) => ficha(k).comun).join(", ") }),
+      h("td", { text: [...p.car].join(", ") || "Sin dato" })));
   });
-  cont.appendChild(t);
+
+  const top = Object.entries(conteo).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  const maximo = top[0][1];
+  const lista = $("vistas"); lista.textContent = "";
+  top.forEach(([k, n]) => {
+    const f = ficha(k);
+    const fill = h("i"); fill.style.width = (n / maximo * 100) + "%";
+    const barra = h("div", { class: "meter" }, fill);
+    barra.style.setProperty("--c", f.plumaje[0]);
+    lista.appendChild(h("li", {}, h("span", { text: f.comun }), barra, h("b", { text: String(n) })));
+  });
 }
 
-function csvSeguro(v){ let s = String(v); if(/^[=+\-@]/.test(s)) s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; }
-
+function csvSeguro(v){
+  let s = String(v);
+  if(/^[=+\-@]/.test(s)) s = "'" + s;           // evita que Excel ejecute fórmulas
+  return '"' + s.replace(/"/g, '""') + '"';
+}
 function descargarCsv(){
   const r = leerRegistro();
   if(!r.length) return;
-  const filas = [["fecha", "parque", "especie", "nombre_comun", "confianza", "caracteristicas"]];
-  r.forEach(o => filas.push([o.fecha, o.parque, o.especie.replace(/_/g, " "), nombreComun(o.especie), o.confianza, o.caract.join("; ")]));
-  const blob = new Blob(["﻿" + filas.map(f => f.map(csvSeguro).join(",")).join("\n")], { type: "text/csv;charset=utf-8" });
-  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "observaciones_aves_lima.csv"; a.click();
+  const filas = [["fecha", "lugar", "especie", "nombre_comun", "confianza", "caracteristicas"]];
+  r.forEach((o) => filas.push([o.fecha, o.parque, o.especie.replace(/_/g, " "), ficha(o.especie).comun, o.confianza, (o.caract || []).join("; ")]));
+  const blob = new Blob(["﻿" + filas.map((f) => f.map(csvSeguro).join(",")).join("\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "observaciones_aves_lima.csv";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+function pintarPie(){
+  if(METRICAS.top1 == null) return;
+  const p = $("pieMetricas");
+  p.hidden = false;
+  p.textContent = "En el conjunto de prueba, el modelo acierta la especie exacta el " + Math.round(METRICAS.top1 * 100) + " % de las veces" +
+    (METRICAS.top3 != null ? " y la incluye entre sus 3 primeras opciones el " + Math.round(METRICAS.top3 * 100) + " %." : ".");
 }
 
 /* ---------- Eventos ---------- */
-$("btnSubir").onclick = () => $("archivo").click();
-$("btnCamara").onclick = () => $("camara").click();
-$("archivo").onchange = (e) => leerArchivo(e.target.files[0]);
-$("camara").onchange = (e) => leerArchivo(e.target.files[0]);
-$("btnGuardar").onclick = guardar;
+$("btnSubir").onclick = $("btnOtra").onclick = () => $("archivo").click();
+$("btnCamara").onclick = $("btnOtraCam").onclick = () => $("camara").click();
+[$("archivo"), $("camara")].forEach((inp) => inp.onchange = (e) => { leerArchivo(e.target.files[0]); e.target.value = ""; });
+$("formReg").onsubmit = guardar;
 $("btnCsv").onclick = descargarCsv;
-$("btnBorrar").onclick = () => { if(confirm("¿Borrar todas las observaciones guardadas?")){ escribirRegistro([]); pintarResumen(); } };
-const drop = $("drop");
-drop.onclick = () => $("archivo").click();
-drop.ondragover = (e) => { e.preventDefault(); drop.classList.add("over"); };
-drop.ondragleave = () => drop.classList.remove("over");
-drop.ondrop = (e) => { e.preventDefault(); drop.classList.remove("over"); leerArchivo(e.dataTransfer.files[0]); };
+$("btnBorrar").onclick = () => {
+  if(confirm("¿Borrar todas las observaciones guardadas? Esta acción no se puede deshacer.")){
+    escribirRegistro([]); pintarResumen(); toast("Registro borrado.");
+  }
+};
+
+const zona = $("zona");
+zona.ondragover = (e) => { e.preventDefault(); zona.classList.add("sobre"); };
+zona.ondragleave = () => zona.classList.remove("sobre");
+zona.ondrop = (e) => { e.preventDefault(); zona.classList.remove("sobre"); leerArchivo(e.dataTransfer.files[0]); };
+
+$("buscar").oninput = (e) => { filtro.q = e.target.value; pintarCatalogo(); };
+$("filtroGrupo").onchange = (e) => { filtro.grupo = e.target.value; pintarCatalogo(); };
+document.querySelectorAll("#filtroOrigen button").forEach((b) => b.onclick = () => {
+  filtro.origen = b.dataset.origen;
+  document.querySelectorAll("#filtroOrigen button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  pintarCatalogo();
+});
+
+const dlg = $("dlg");
+$("dCerrar").onclick = () => dlg.close ? dlg.close() : dlg.removeAttribute("open");
+dlg.addEventListener("click", (e) => { if(e.target === dlg) dlg.close(); });
 
 iniciar();
 </script>
