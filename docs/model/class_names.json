@@ -1,14 +1,22 @@
 [
   "Amazilia_amazilia",
+  "Ardea_ibis",
+  "Athene_cunicularia",
   "Columba_livia",
   "Columbina_cruziana",
   "Coragyps_atratus",
+  "Dives_warczewiczi",
   "Falco_sparverius",
+  "Forpus_coelestis",
   "Larus_dominicanus",
   "Mimus_longicaudatus",
+  "Nannopterum_brasilianum",
   "Passer_domesticus",
+  "Pelecanus_thagus",
   "Pyrocephalus_obscurus",
+  "Thraupis_episcopus",
   "Turdus_chiguanco",
+  "Tyrannus_melancholicus",
   "Zenaida_meloda",
   "Zonotrichia_capensis"
 ]
