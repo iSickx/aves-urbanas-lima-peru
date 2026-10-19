@@ -78,6 +78,8 @@
   .chip{--c1:#8a979c;--c2:#4b5a60;aspect-ratio:1;border-radius:4px;background:linear-gradient(135deg,var(--c1) 0 54%,var(--c2) 54% 100%);box-shadow:inset 0 0 0 1px rgb(0 0 0 / .14)}
   .chip.entra{animation:cortar .7s cubic-bezier(.2,.7,.2,1) both}
   @keyframes cortar{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+  /* ficha aún sin revelar: gris rayado hasta que se identifica esa ave */
+  .chip.oculto{background:repeating-linear-gradient(135deg,var(--soft) 0 9px,color-mix(in srgb,var(--soft) 65%,var(--line)) 9px 18px);box-shadow:inset 0 0 0 1px var(--line)}
 
   /* Resultado */
   #resultado{padding-bottom:64px}
@@ -294,7 +296,7 @@
 
   <section class="wrap seccion" id="catalogo">
     <h2>Catálogo de especies</h2>
-    <p class="sub">Las aves que el modelo sabe reconocer. Cada ficha de color muestra los dos tonos principales del plumaje.</p>
+    <p class="sub">Las aves que el modelo sabe reconocer. El color de cada ficha aparece cuando identificas esa ave con una foto.</p>
     <div class="barra-filtros">
       <input id="buscar" type="search" placeholder="Buscar por nombre" aria-label="Buscar por nombre">
       <div class="filtros" id="filtroOrigen" role="group" aria-label="Filtrar por origen">
@@ -308,6 +310,7 @@
     <ul class="grid" id="grid"></ul>
     <p class="nota" id="vacioCat" hidden>No hay especies con esos filtros. Prueba quitar alguno.</p>
     <p class="nota">Los colores son una referencia aproximada del plumaje, no una foto de la especie.</p>
+    <button class="btn sec" id="btnReiniciar" type="button" style="margin-top:14px">Volver a ocultar los colores</button>
   </section>
 
   <section class="wrap seccion" id="registro">
@@ -362,11 +365,13 @@
 const IMG = 224;
 const UMBRAL = 0.50;                 // por debajo de esto se avisa que el modelo no está seguro
 const CLAVE = "obs_aves_lima_v1";
+const CLAVE_D = "aves_descubiertas_v1";   // aves ya identificadas: su color se muestra en el catálogo
 const CARACTS = ["Muchos árboles", "Césped amplio", "Cuerpo de agua", "Flores y jardines", "Zona muy construida", "Cerca del mar"];
-// Opcional: tras entrenar, copia aquí los valores de metricas.json (entre 0 y 1) para mostrarlos en el pie.
+// Métricas del modelo de 20 especies en el conjunto de prueba (de metricas.json). Pon null para ocultarlas.
 const METRICAS = { top1: 0.669, top3: 0.847 };
 
 let modelo = null, clases = [], especies = {}, ultima = null, urlFoto = null;
+const descubiertas = new Set(leerDescubiertas());
 const filtro = { origen: "todas", grupo: "todos", q: "" };
 
 const $ = (id) => document.getElementById(id);
@@ -403,6 +408,13 @@ function ficha(clave){
 }
 function pintarChip(el, f){ el.style.setProperty("--c1", f.plumaje[0]); el.style.setProperty("--c2", f.plumaje[1]); }
 function claves(){ return clases.length ? clases : Object.keys(especies); }
+
+function leerDescubiertas(){
+  try{ const a = JSON.parse(localStorage.getItem(CLAVE_D)); return Array.isArray(a) ? a : []; }catch(e){ return []; }
+}
+function guardarDescubiertas(){
+  try{ localStorage.setItem(CLAVE_D, JSON.stringify([...descubiertas])); }catch(e){ /* sin almacenamiento: solo dura esta visita */ }
+}
 
 function estadoModelo(tipo, texto){ $("estado").dataset.tipo = tipo; $("estadoTxt").textContent = texto; }
 
@@ -487,6 +499,12 @@ async function predecir(img){
 function mostrarResultado(top){
   const f = ficha(top[0].clave), p = top[0].prob;
   ultima = { clave: f.clave, confianza: p };
+  if(p >= UMBRAL && !descubiertas.has(f.clave)){       // solo se revela el color si el modelo está seguro
+    descubiertas.add(f.clave);
+    guardarDescubiertas();
+    pintarCatalogo();
+    toast("Color de «" + f.comun + "» añadido al catálogo.");
+  }
   $("resVacio").hidden = true;
   $("res").hidden = false;
 
@@ -542,13 +560,15 @@ function pintarCatalogo(){
     (filtro.grupo === "todos" || f.grupo === filtro.grupo) &&
     (!q || norm(f.comun).includes(q) || norm(f.cientifico).includes(q))
   ).sort((a, b) => a.comun.localeCompare(b.comun, "es"));
-  $("cuenta").textContent = items.length === todas.length
+  const nVistas = todas.filter((f) => descubiertas.has(f.clave)).length;
+  $("cuenta").textContent = (items.length === todas.length
     ? plural(todas.length, "especie", "especies")
-    : items.length + " de " + todas.length + " especies";
+    : items.length + " de " + todas.length + " especies") + ". Has identificado " + nVistas + ".";
   $("vacioCat").hidden = items.length > 0;
   items.forEach((f) => {
-    const chip = h("div", { class: "chip" });
-    pintarChip(chip, f);
+    const visto = descubiertas.has(f.clave);
+    const chip = h("div", { class: visto ? "chip" : "chip oculto" });
+    if(visto) pintarChip(chip, f);
     cont.appendChild(h("li", {},
       h("button", { class: "tile", type: "button", onclick: () => abrirFicha(f.clave) },
         chip,
@@ -560,7 +580,9 @@ function pintarCatalogo(){
 
 function abrirFicha(clave){
   const f = ficha(clave);
-  pintarChip($("dChip"), f);
+  const visto = descubiertas.has(clave);
+  $("dChip").classList.toggle("oculto", !visto);
+  if(visto) pintarChip($("dChip"), f);
   $("dNombre").textContent = f.comun;
   $("dSci").textContent = f.cientifico;
   $("dOrigen").textContent = f.origen || "Origen sin dato";
@@ -687,6 +709,10 @@ document.querySelectorAll("#filtroOrigen button").forEach((b) => b.onclick = () 
   document.querySelectorAll("#filtroOrigen button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
   pintarCatalogo();
 });
+
+$("btnReiniciar").onclick = () => {
+  descubiertas.clear(); guardarDescubiertas(); pintarCatalogo(); toast("Los colores del catálogo volvieron a ocultarse.");
+};
 
 const dlg = $("dlg");
 $("dCerrar").onclick = () => dlg.close ? dlg.close() : dlg.removeAttribute("open");
